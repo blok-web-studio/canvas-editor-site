@@ -86,9 +86,11 @@ a{color:inherit;text-decoration:none}
 
 /* ── Hero ── */
 .hero{
-  padding:110px clamp(20px,5vw,80px) 40px;
+  padding:100px clamp(20px,5vw,80px) 40px;
   display:flex;flex-direction:column;align-items:center;text-align:center;
+  min-height:100vh;justify-content:center;
 }
+.hero-content{transition:opacity .1s linear}
 .hero h1{
   font-size:clamp(40px,7vw,72px);font-weight:700;line-height:1.05;
   letter-spacing:-.03em;max-width:800px;margin-bottom:20px;
@@ -269,34 +271,41 @@ section{padding:120px clamp(20px,5vw,80px)}
 
 /* ── Code Section ── */
 .code-section{background:var(--surface)}
+.code-layout{
+  display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;
+}
+.code-text{padding-top:8px}
+.code-terminal{
+  background:#1d1d1f;border-radius:var(--radius);overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
+}
+.code-terminal-bar{
+  display:flex;align-items:center;padding:10px 14px;
+  background:#2a2a2e;border-bottom:1px solid #3a3a3e;gap:6px;
+}
+.code-terminal-dot{width:10px;height:10px;border-radius:50%}
+.code-terminal-dot:nth-child(1){background:#ff5f56}
+.code-terminal-dot:nth-child(2){background:#ffbd2e}
+.code-terminal-dot:nth-child(3){background:#27c93f}
+.code-terminal-title{font-size:11px;color:#86868b;margin-left:8px;font-family:var(--mono)}
+.code-terminal-body{padding:20px 24px;font-family:var(--mono);font-size:13px;line-height:1.8;color:#f5f5f7}
+.code-terminal-body .prompt{color:#86868b;user-select:none}
+.code-terminal-body .cmd{color:#50fa7b}
+.code-terminal-body .pkg{color:#f1fa8c}
+.code-terminal-body .comment{color:#6272a4}
+.code-terminal-body .kw{color:#ff79c6}
+.code-terminal-body .fn{color:#50fa7b}
+.code-terminal-body .str{color:#f1fa8c}
+.code-terminal-body .var{color:#8be9fd}
 .code-block{
   background:#1d1d1f;color:#f5f5f7;border-radius:var(--radius);
-  padding:28px 32px;font-family:var(--mono);font-size:13px;line-height:1.8;
-  overflow-x:auto;max-width:640px;position:relative;
+  padding:20px 24px;font-family:var(--mono);font-size:13px;line-height:1.8;
+  overflow-x:auto;position:relative;margin-top:12px;
+  border-top:1px solid #3a3a3e;
 }
 .code-block .code-label{
   position:absolute;top:12px;right:16px;font-size:11px;color:#86868b;font-weight:500;
 }
-.code-block .kw{color:#ff79c6}
-.code-block .fn{color:#50fa7b}
-.code-block .str{color:#f1fa8c}
-.code-block .cm{color:#6272a4}
-.code-block .var{color:#8be9fd}
-.code-block .num{color:#bd93f9}
-.code-block .op{color:#ff79c6}
-.install-block{
-  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
-  padding:20px 28px;font-family:var(--mono);font-size:14px;
-  display:flex;align-items:center;gap:12px;max-width:640px;margin-bottom:24px;
-}
-.install-block .prompt{color:var(--text-tertiary);user-select:none}
-.install-block .pkg{color:var(--text);font-weight:500}
-.install-block .copy{
-  margin-left:auto;background:var(--surface);border:1px solid var(--border-light);
-  padding:6px 12px;border-radius:6px;font-size:11px;font-family:var(--font);
-  font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .2s;
-}
-.install-block .copy:hover{background:var(--border-light)}
 
 /* ── Use Cases ── */
 .use-cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
@@ -315,13 +324,22 @@ section{padding:120px clamp(20px,5vw,80px)}
 .use-case-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
 
 /* ── Stats ── */
-.stats-bar{
-  display:flex;justify-content:center;gap:48px;flex-wrap:wrap;
-  padding:48px 0;
+.stats-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:640px;margin:0 auto;
 }
-.stat{text-align:center}
-.stat-value{font-size:32px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
-.stat-label{font-size:13px;color:var(--text-secondary);margin-top:4px;font-weight:500}
+.stat-card{
+  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
+  padding:32px 28px;text-align:center;transition:border-color .2s;
+}
+.stat-card:hover{border-color:var(--accent)}
+.stat-value{font-size:40px;font-weight:700;letter-spacing:-.03em;color:var(--text);line-height:1.1}
+.stat-label{font-size:13px;color:var(--text-secondary);margin-top:8px;font-weight:500}
+.stat-card.featured{
+  grid-column:1/-1;background:var(--text);color:#fff;border-color:transparent;
+  padding:40px 28px;
+}
+.stat-card.featured .stat-value{color:#fff;font-size:20px;font-weight:600;letter-spacing:-.01em;line-height:1.4}
+.stat-card.featured .stat-label{color:rgba(255,255,255,.6);margin-top:4px}
 
 /* ── CTA Section ── */
 .cta-section{text-align:center;padding:120px clamp(20px,5vw,80px)}
@@ -345,7 +363,9 @@ section{padding:120px clamp(20px,5vw,80px)}
   .dock-logo{font-size:12px;padding:5px 10px;padding-right:12px;margin-right:2px}
   .dock-cta{font-size:11px;padding:5px 10px}
   section{padding:80px 20px}
-  .hero{padding:80px 20px 40px}
+  .hero{padding:80px 20px 40px;min-height:auto}
+  .code-layout{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr}
   .comparison-grid{grid-template-columns:1fr}
   .features-grid{grid-template-columns:1fr}
   .use-cases-grid{grid-template-columns:1fr}
@@ -379,11 +399,13 @@ section{padding:120px clamp(20px,5vw,80px)}
 <!-- ── Hero ── -->
 <main>
 <section class="hero">
-  <h1 class="reveal">Documents that render<br>the same, everywhere.</h1>
-  <p class="hero-sub reveal reveal-delay-1">The rich text editor that renders identically across every browser.</p>
-  <div class="hero-actions reveal reveal-delay-2">
-    <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-primary">Get Started</a>
-    <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-secondary">View on GitHub</a>
+  <div class="hero-content" id="hero-content">
+    <h1 class="reveal">Documents that render<br>the same, everywhere.</h1>
+    <p class="hero-sub reveal reveal-delay-1">The rich text editor that renders identically across every browser.</p>
+    <div class="hero-actions reveal reveal-delay-2">
+      <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-primary">Get Started</a>
+      <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-secondary">View on GitHub</a>
+    </div>
   </div>
 
   <!-- Editor Mockup -->
@@ -533,25 +555,34 @@ section{padding:120px clamp(20px,5vw,80px)}
 <!-- ── Quick Start ── -->
 <section id="quickstart" class="code-section">
   <div class="section-inner">
-    <div class="section-eyebrow reveal">Quick Start</div>
-    <h2 class="section-title reveal reveal-delay-1">Integrate in minutes.</h2>
-    <p class="section-desc reveal reveal-delay-2">One npm package. A few lines of code. Your documents rendered on canvas.</p>
-    <div class="install-block reveal reveal-delay-2">
-      <span class="prompt">$</span>
-      <span class="pkg">npm install @hufe921/canvas-editor</span>
-      <button class="copy" onclick="navigator.clipboard.writeText('npm install @hufe921/canvas-editor').then(()=>this.textContent='Copied')">Copy</button>
-    </div>
-    <div class="code-block reveal reveal-delay-3">
-      <div class="code-label">main.ts</div>
+    <div class="code-layout">
+      <div class="code-text">
+        <div class="section-eyebrow reveal">Quick Start</div>
+        <h2 class="section-title reveal reveal-delay-1">Integrate in minutes.</h2>
+        <p class="section-desc reveal reveal-delay-2">One npm package. A few lines of code. Your documents rendered on canvas.</p>
+      </div>
+      <div class="code-terminal reveal reveal-delay-1">
+        <div class="code-terminal-bar">
+          <div class="code-terminal-dot"></div>
+          <div class="code-terminal-dot"></div>
+          <div class="code-terminal-dot"></div>
+          <div class="code-terminal-title">Terminal</div>
+        </div>
+        <div class="code-terminal-body">
+          <span class="prompt">$ </span><span class="cmd">npm</span> <span class="pkg">install @hufe921/canvas-editor</span>
+        </div>
+        <div class="code-block">
 <span class="kw">import</span> { <span class="fn">Editor</span> } <span class="kw">from</span> <span class="str">'@hufe921/canvas-editor'</span>
 
 <span class="kw">const</span> <span class="var">editor</span> = <span class="kw">new</span> <span class="fn">Editor</span>({
   <span class="fn">container</span>: document.<span class="fn">getElementById</span>(<span class="str">'editor'</span>),
-  <span class="fn">data</span>: <span class="cm">/* your document data */</span>,
+  <span class="fn">data</span>: <span class="comment">/* your document data */</span>,
   <span class="fn">mode</span>: <span class="str">'edit'</span>, <span class="cm">// or 'read'</span>
 })
 
 <span class="var">editor</span>.<span class="fn">destroy</span>()
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -564,7 +595,7 @@ section{padding:120px clamp(20px,5vw,80px)}
     <p class="section-desc reveal reveal-delay-2">When the output must be right — every time, on every screen.</p>
     <div class="use-cases-grid">
       <div class="use-case-card reveal">
-        <div class="use-case-icon"><i class="ph ph-heart-pulse"></i></div>
+        <div class="use-case-icon"><i class="ph ph-stethoscope"></i></div>
         <h3>EMR Systems</h3>
         <p>Electronic medical records that render identically across devices. Patient data presented with clinical precision.</p>
       </div>
@@ -585,22 +616,26 @@ section{padding:120px clamp(20px,5vw,80px)}
 <!-- ── Stats ── -->
 <section class="section-light">
   <div class="section-inner" style="text-align:center">
-    <div class="stats-bar reveal">
-      <div class="stat">
+    <div class="stats-grid reveal">
+      <div class="stat-card">
         <div class="stat-value">5,000+</div>
         <div class="stat-label">GitHub Stars</div>
       </div>
-      <div class="stat">
+      <div class="stat-card">
         <div class="stat-value">841</div>
         <div class="stat-label">Forks</div>
       </div>
-      <div class="stat">
+      <div class="stat-card">
         <div class="stat-value">1,435</div>
         <div class="stat-label">Commits</div>
       </div>
-      <div class="stat">
+      <div class="stat-card">
         <div class="stat-value">TypeScript</div>
         <div class="stat-label">Built With</div>
+      </div>
+      <div class="stat-card featured">
+        <div class="stat-value">Open-source, extensible,<br>and ready for production.</div>
+        <div class="stat-label">MIT License</div>
       </div>
     </div>
   </div>
@@ -656,8 +691,9 @@ section{padding:120px clamp(20px,5vw,80px)}
 
   document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el)})
 
-  // ── Mockup Tilt ──
+  // ── Mockup Tilt + Hero Fade ──
   var mockup = document.getElementById('editor-mockup')
+  var heroContent = document.getElementById('hero-content')
   var tiltRaf = false
 
   function updateTilt(){
@@ -668,6 +704,9 @@ section{padding:120px clamp(20px,5vw,80px)}
     var eased = 1 - Math.pow(1 - progress, 3)
     var rotateX = 20 - (20 * eased)
     mockup.style.transform = 'perspective(600px) rotateX(' + rotateX + 'deg)'
+    // Hero text fades out as you scroll
+    var fadeProgress = Math.min(y / 300, 1)
+    heroContent.style.opacity = 1 - fadeProgress
     tiltRaf = false
   }
 
