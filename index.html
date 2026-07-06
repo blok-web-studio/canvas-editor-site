@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Canvas-Editor — The Document Rendering Engine</title>
+<meta name="description" content="A canvas-based rich text editor for pixel-perfect, cross-browser document rendering. Built for EMR, legal, reports, and anything that needs to be right every time.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#ffffff;
+  --text:#1d1d1f;
+  --text-secondary:#6e6e73;
+  --text-tertiary:#86868b;
+  --accent:#0071e3;
+  --accent-hover:#0077ed;
+  --surface:#f5f5f7;
+  --surface-dark:#f2f2f2;
+  --border:#d2d2d7;
+  --border-light:#e6e6e8;
+  --code-bg:#f5f5f7;
+  --code-border:#e6e6e8;
+  --green:#34c759;
+  --red:#ff3b30;
+  --radius:12px;
+  --radius-sm:8px;
+  --max-w:1120px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  font-size:16px;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+
+/* ── Scroll Reveal ── */
+.reveal{opacity:0;transform:translateY(32px);transition:opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.1s}
+.reveal-delay-2{transition-delay:.2s}
+.reveal-delay-3{transition-delay:.3s}
+
+/* ── Nav ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(255,255,255,.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border-light);
+  height:52px;display:flex;align-items:center;
+  padding:0 clamp(20px,5vw,80px);
+}
+.nav-inner{width:100%;max-width:var(--max-w);margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{font-weight:600;font-size:15px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.nav-logo .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0}
+.nav-links{display:flex;gap:28px;align-items:center}
+.nav-links a{font-size:13px;color:var(--text-secondary);font-weight:500;transition:color .2s}
+.nav-links a:hover{color:var(--text)}
+.nav-links .btn-nav{
+  background:var(--accent);color:#fff;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;
+}
+.nav-links .btn-nav:hover{background:var(--accent-hover)}
+
+/* ── Hero ── */
+.hero{
+  padding:140px clamp(20px,5vw,80px) 80px;
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+}
+.hero-eyebrow{
+  font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:16px;
+}
+.hero h1{
+  font-size:clamp(40px,7vw,72px);font-weight:700;line-height:1.05;
+  letter-spacing:-.03em;max-width:800px;margin-bottom:20px;
+}
+.hero-sub{
+  font-size:clamp(17px,2.5vw,21px);color:var(--text-secondary);line-height:1.55;
+  max-width:560px;font-weight:400;margin-bottom:40px;
+}
+.hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.btn-primary{
+  background:var(--accent);color:#fff;padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;
+  transition:background .2s;display:inline-block;
+}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{
+  background:var(--surface);color:var(--text);padding:14px 28px;border-radius:10px;font-size:15px;font-weight:600;
+  transition:background .2s;display:inline-block;border:1px solid var(--border-light);
+}
+.btn-secondary:hover{background:var(--surface-dark)}
+
+/* ── Editor Mockup ── */
+.mockup-wrap{
+  margin-top:60px;width:100%;max-width:960px;perspective:1200px;
+}
+.editor-mockup{
+  background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:0 8px 40px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.04);
+  overflow:hidden;
+}
+.editor-titlebar{
+  display:flex;align-items:center;padding:12px 16px;
+  background:var(--surface);border-bottom:1px solid var(--border-light);gap:8px;
+}
+.editor-dots{display:flex;gap:6px}
+.editor-dots span{width:10px;height:10px;border-radius:50%;background:#e0e0e0}
+.editor-dots span:nth-child(1){background:#ff5f56}
+.editor-dots span:nth-child(2){background:#ffbd2e}
+.editor-dots span:nth-child(3){background:#27c93f}
+.editor-title{font-size:12px;color:var(--text-tertiary);margin-left:8px;font-weight:500}
+.editor-toolbar{
+  display:flex;align-items:center;gap:2px;padding:8px 16px;
+  border-bottom:1px solid var(--border-light);background:#fafafa;flex-wrap:wrap;
+}
+.editor-toolbar .sep{width:1px;height:20px;background:var(--border);margin:0 6px}
+.editor-toolbar button{
+  width:28px;height:28px;border:none;background:transparent;border-radius:4px;
+  cursor:default;display:flex;align-items:center;justify-content:center;
+  color:var(--text-secondary);font-size:13px;font-weight:600;
+}
+.editor-toolbar button.active{background:var(--border-light);color:var(--text)}
+.editor-body{display:flex;min-height:380px}
+.editor-pages{
+  flex:1;padding:32px 48px;font-family:var(--font);color:#1d1d1f;
+  position:relative;
+}
+.editor-page{
+  background:#fff;border:1px solid #eee;border-radius:2px;
+  padding:40px 48px;min-height:340px;
+  box-shadow:0 1px 4px rgba(0,0,0,.04);
+}
+.editor-page h2{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px;line-height:1.3}
+.editor-page .meta{font-size:12px;color:var(--text-tertiary);margin-bottom:24px;font-weight:400}
+.editor-page p{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:16px}
+.editor-page .section-label{font-size:13px;font-weight:600;color:var(--text-secondary);margin:20px 0 10px;text-transform:uppercase;letter-spacing:.06em}
+.editor-page table{
+  width:100%;border-collapse:collapse;margin-bottom:20px;font-size:13px;
+}
+.editor-page th{
+  text-align:left;padding:8px 12px;background:var(--surface);font-weight:600;
+  border-bottom:1px solid var(--border);font-size:12px;color:var(--text-secondary);
+}
+.editor-page td{
+  padding:8px 12px;border-bottom:1px solid var(--border-light);
+}
+.editor-page tr:last-child td{border-bottom:none}
+.editor-page .math{
+  font-family:var(--mono);font-size:13px;background:var(--surface);
+  padding:10px 14px;border-radius:6px;margin:12px 0;color:var(--text);
+  border:1px solid var(--border-light);
+}
+.editor-sidebar{
+  width:180px;border-left:1px solid var(--border-light);padding:16px;
+  background:#fafafa;font-size:12px;color:var(--text-tertiary);
+}
+.editor-sidebar .page-indicator{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 0;
+}
+.editor-sidebar .page-thumb{
+  width:100%;aspect-ratio:.75;background:#fff;border:1px solid var(--border);
+  border-radius:2px;position:relative;overflow:hidden;
+}
+.editor-sidebar .page-thumb.active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,113,227,.2)}
+.editor-sidebar .page-thumb-content{
+  position:absolute;inset:6px;background:#fafafa;border-radius:1px;
+}
+.editor-sidebar .page-label{font-size:11px;font-weight:500;color:var(--text-tertiary)}
+
+/* ── Section Styles ── */
+section{padding:120px clamp(20px,5vw,80px)}
+.section-inner{max-width:var(--max-w);margin:0 auto}
+.section-eyebrow{
+  font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:12px;
+}
+.section-title{
+  font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.15;
+  letter-spacing:-.025em;margin-bottom:16px;max-width:640px;
+}
+.section-desc{
+  font-size:clamp(16px,2vw,19px);color:var(--text-secondary);line-height:1.6;
+  max-width:560px;margin-bottom:48px;
+}
+.section-light{background:var(--surface)}
+
+/* ── Comparison ── */
+.comparison-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:24px;
+}
+.comparison-card{
+  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
+  padding:32px;position:relative;overflow:hidden;
+}
+.comparison-card.bad{border-color:#ff3b3020}
+.comparison-card.bad .comparison-tag{background:#ff3b30;color:#fff}
+.comparison-card.good{border-color:#34c75920}
+.comparison-card.good .comparison-tag{background:#34c759;color:#fff}
+.comparison-tag{
+  display:inline-block;font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:20px;
+}
+.comparison-card h3{font-size:18px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px}
+.comparison-card p{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px}
+.comparison-visual{
+  background:var(--surface);border-radius:var(--radius-sm);padding:20px;
+  font-family:var(--mono);font-size:12px;color:var(--text-secondary);
+  line-height:1.8;min-height:120px;
+}
+.comparison-visual .broken{
+  position:relative;
+}
+.comparison-visual .break-line{
+  border-top:2px dashed var(--red);
+  position:relative;margin:8px 0;
+}
+.comparison-visual .break-label{
+  position:absolute;top:-20px;right:0;font-size:10px;color:var(--red);font-weight:500;
+}
+.comparison-visual .perfect{position:relative}
+.comparison-visual .page-marker{
+  display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-tertiary);
+  border-top:1px solid var(--border);padding-top:8px;margin-top:8px;
+}
+.comparison-visual .page-marker::before{content:'';display:block;width:16px;height:1px;background:var(--border)}
+
+/* ── Features Grid ── */
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:20px;
+}
+.feature-card{
+  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
+  padding:28px;transition:border-color .2s,box-shadow .2s;
+}
+.feature-card:hover{border-color:var(--accent);box-shadow:0 2px 12px rgba(0,113,227,.06)}
+.feature-icon{
+  width:40px;height:40px;background:var(--surface);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+  font-size:18px;
+}
+.feature-card h3{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
+.feature-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
+
+/* ── Code Section ── */
+.code-section{background:var(--surface)}
+.code-block{
+  background:#1d1d1f;color:#f5f5f7;border-radius:var(--radius);
+  padding:28px 32px;font-family:var(--mono);font-size:13px;line-height:1.8;
+  overflow-x:auto;max-width:640px;position:relative;
+}
+.code-block .code-label{
+  position:absolute;top:12px;right:16px;font-size:11px;color:#86868b;font-weight:500;
+}
+.code-block .kw{color:#ff79c6}
+.code-block .fn{color:#50fa7b}
+.code-block .str{color:#f1fa8c}
+.code-block .cm{color:#6272a4}
+.code-block .var{color:#8be9fd}
+.code-block .num{color:#bd93f9}
+.code-block .op{color:#ff79c6}
+.install-block{
+  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
+  padding:20px 28px;font-family:var(--mono);font-size:14px;
+  display:flex;align-items:center;gap:12px;max-width:640px;margin-bottom:24px;
+}
+.install-block .prompt{color:var(--text-tertiary);user-select:none}
+.install-block .pkg{color:var(--text);font-weight:500}
+.install-block .copy{
+  margin-left:auto;background:var(--surface);border:1px solid var(--border-light);
+  padding:6px 12px;border-radius:6px;font-size:11px;font-family:var(--font);
+  font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all .2s;
+}
+.install-block .copy:hover{background:var(--border-light)}
+
+/* ── Use Cases ── */
+.use-cases-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.use-case-card{
+  background:#fff;border:1px solid var(--border-light);border-radius:var(--radius);
+  padding:28px;transition:border-color .2s;
+}
+.use-case-card:hover{border-color:var(--accent)}
+.use-case-icon{font-size:28px;margin-bottom:12px}
+.use-case-card h3{font-size:15px;font-weight:700;margin-bottom:6px}
+.use-case-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
+
+/* ── Stats ── */
+.stats-bar{
+  display:flex;justify-content:center;gap:48px;flex-wrap:wrap;
+  padding:48px 0;
+}
+.stat{text-align:center}
+.stat-value{font-size:32px;font-weight:700;letter-spacing:-.02em;color:var(--text)}
+.stat-label{font-size:13px;color:var(--text-secondary);margin-top:4px;font-weight:500}
+
+/* ── CTA Section ── */
+.cta-section{text-align:center;padding:120px clamp(20px,5vw,80px)}
+.cta-section .section-title{margin-left:auto;margin-right:auto;text-align:center}
+.cta-section .section-desc{margin-left:auto;margin-right:auto;text-align:center}
+
+/* ── Footer ── */
+.footer{
+  border-top:1px solid var(--border-light);padding:40px clamp(20px,5vw,80px);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.footer-left{font-size:13px;color:var(--text-tertiary);line-height:1.6}
+.footer-right{display:flex;gap:20px}
+.footer-right a{font-size:13px;color:var(--text-secondary);font-weight:500;transition:color .2s}
+.footer-right a:hover{color:var(--accent)}
+
+/* ── Divider ── */
+.divider{
+  width:48px;height:1px;background:var(--border);margin:0 auto;
+}
+
+/* ── Mobile ── */
+@media(max-width:768px){
+  .nav{padding:0 20px}
+  .nav-links{gap:16px}
+  .nav-links .btn-nav{display:none}
+  section{padding:80px 20px}
+  .hero{padding:100px 20px 60px}
+  .comparison-grid{grid-template-columns:1fr}
+  .features-grid{grid-template-columns:1fr}
+  .use-cases-grid{grid-template-columns:1fr}
+  .editor-sidebar{display:none}
+  .editor-pages{padding:20px 24px}
+  .editor-page{padding:24px 20px;min-height:auto}
+  .stats-bar{gap:32px}
+  .stat-value{font-size:24px}
+  .footer{flex-direction:column;align-items:flex-start}
+  .install-block{font-size:12px;padding:16px 20px}
+  .code-block{font-size:11px;padding:20px}
+}
+@media(min-width:769px) and (max-width:1024px){
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .use-cases-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Nav ── -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo"><span class="dot"></span> canvas-editor</div>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener">npm</a>
+      <a href="https://hufe.club/canvas-editor" target="_blank" rel="noopener" class="btn-nav">Try Demo</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-eyebrow reveal">Canvas-based rendering</div>
+  <h1 class="reveal reveal-delay-1">Documents that render<br>the same, everywhere.</h1>
+  <p class="hero-sub reveal reveal-delay-2">A rich text editor for applications that need pixel-perfect, cross-browser document rendering. Pagination, tables, math, and form controls — all rendered on canvas.</p>
+  <div class="hero-actions reveal reveal-delay-3">
+    <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-primary">Get Started</a>
+    <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-secondary">View on GitHub</a>
+  </div>
+
+  <!-- Editor Mockup -->
+  <div class="mockup-wrap reveal reveal-delay-3">
+    <div class="editor-mockup">
+      <div class="editor-titlebar">
+        <div class="editor-dots"><span></span><span></span><span></span></div>
+        <div class="editor-title">Quarterly Report — canvas-editor</div>
+      </div>
+      <div class="editor-toolbar">
+        <button class="active"><b>B</b></button>
+        <button><i>I</i></button>
+        <button><u>U</u></button>
+        <button style="text-decoration:line-through">S</button>
+        <div class="sep"></div>
+        <button>H₁</button>
+        <button>H₂</button>
+        <button>¶</button>
+        <div class="sep"></div>
+        <button>≡</button>
+        <button>⫶</button>
+        <button>⊞</button>
+        <div class="sep"></div>
+        <button>🎨</button>
+        <button>📎</button>
+        <button>∑</button>
+      </div>
+      <div class="editor-body">
+        <div class="editor-pages">
+          <div class="editor-page">
+            <h2>Q4 2026 Revenue Report</h2>
+            <div class="meta">Prepared by Analytics Division · December 2026 · Confidential</div>
+            <p>This report summarizes revenue performance across all business units for Q4 2026. Total consolidated revenue reached <strong>$42.8M</strong>, representing a 12.3% year-over-year increase driven by strong growth in the enterprise segment.</p>
+            <div class="section-label">Revenue by Segment</div>
+            <table>
+              <tr><th>Segment</th><th>Q3 2026</th><th>Q4 2026</th><th>Change</th></tr>
+              <tr><td>Enterprise</td><td>$18.2M</td><td>$21.4M</td><td style="color:#34c759;font-weight:600">+17.6%</td></tr>
+              <tr><td>SMB</td><td>$12.1M</td><td>$12.8M</td><td style="color:#34c759;font-weight:600">+5.8%</td></tr>
+              <tr><td>Consumer</td><td>$8.5M</td><td>$8.6M</td><td style="color:#34c759;font-weight:600">+1.2%</td></tr>
+            </table>
+            <div class="math">Revenue Growth: Σ (Segment Q4 − Segment Q3) / Σ Segment Q3 = 12.3%</div>
+            <p>The enterprise segment continues to outpace expectations, with 8 new Fortune 500 contracts signed during the quarter.</p>
+          </div>
+        </div>
+        <div class="editor-sidebar">
+          <div class="page-indicator">
+            <div class="page-thumb active"><div class="page-thumb-content"></div></div>
+            <div class="page-label">Page 1 of 3</div>
+          </div>
+          <div class="page-indicator">
+            <div class="page-thumb"><div class="page-thumb-content"></div></div>
+            <div class="page-label">Page 2 of 3</div>
+          </div>
+          <div class="page-indicator">
+            <div class="page-thumb"><div class="page-thumb-content"></div></div>
+            <div class="page-label">Page 3 of 3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Why Canvas ── -->
+<section id="why" class="section-light">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Why canvas</div>
+    <h2 class="section-title reveal reveal-delay-1">The web's document problem.</h2>
+    <p class="section-desc reveal reveal-delay-2">Contenteditable editors rely on the browser to render text. Every browser does it differently. Page breaks, tables, and line spacing shift depending on where you open the document. Canvas-editor draws every pixel itself — the output is identical everywhere.</p>
+    <div class="comparison-grid">
+      <div class="comparison-card bad reveal">
+        <div class="comparison-tag">Contenteditable</div>
+        <h3>Varies by browser</h3>
+        <p>Same HTML, different output. Tables misalign, page breaks shift, fonts render differently.</p>
+        <div class="comparison-visual">
+          <div class="broken">
+            <span style="color:var(--text)">Revenue Report — Q4</span><br>
+            <span style="color:var(--text-secondary)">Segment &nbsp;&nbsp;&nbsp; Revenue &nbsp;&nbsp; Change</span><br>
+            <span style="color:var(--text)">Enterprise &nbsp;$21.4M &nbsp;&nbsp;+17.6%</span><br>
+            <span style="color:var(--text)">SMB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$12.8M</span><br>
+            <div class="break-line"><span class="break-label">⚠ page break here</span></div>
+            <span style="color:var(--text)">Consumer &nbsp;&nbsp;$8.6M</span><br>
+            <span style="color:var(--text-secondary);font-size:10px;margin-top:8px;display:block">↳ renders differently in Chrome vs Safari</span>
+          </div>
+        </div>
+      </div>
+      <div class="comparison-card good reveal reveal-delay-1">
+        <div class="comparison-tag">Canvas-editor</div>
+        <h3>Pixel-perfect, everywhere</h3>
+        <p>Every character, table cell, and page break is drawn identically across all browsers.</p>
+        <div class="comparison-visual">
+          <div class="perfect">
+            <span style="color:var(--text)">Revenue Report — Q4</span><br>
+            <span style="color:var(--text-secondary)">Segment &nbsp;&nbsp;&nbsp; Revenue &nbsp;&nbsp; Change</span><br>
+            <span style="color:var(--text)">Enterprise &nbsp;$21.4M &nbsp;&nbsp;+17.6%</span><br>
+            <span style="color:var(--text)">SMB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$12.8M &nbsp;&nbsp;+5.8%</span><br>
+            <div class="page-marker"><span>Page 1 · 184 words · Line 4</span></div>
+            <span style="color:var(--text)">Consumer &nbsp;&nbsp;$8.6M &nbsp;&nbsp;&nbsp;+1.2%</span><br>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section id="features">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Features</div>
+    <h2 class="section-title reveal reveal-delay-1">Everything a document needs.</h2>
+    <p class="section-desc reveal reveal-delay-2">Pagination, tables, math, forms, plugins — not bolted on. First-class.</p>
+    <div class="features-grid">
+      <div class="feature-card reveal">
+        <div class="feature-icon">📄</div>
+        <h3>Native Pagination</h3>
+        <p>Document-style page breaks with headers, footers, and watermarks. Content flows across pages like Word.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">∑</div>
+        <h3>LaTeX Math</h3>
+        <p>Inline and block equations rendered natively. No iframes, no external renderers.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">✓</div>
+        <h3>Form Controls</h3>
+        <p>Checkboxes, radio buttons, dropdowns, date pickers, text inputs — all interactive and data-bound.</p>
+      </div>
+      <div class="feature-card reveal">
+        <div class="feature-icon">⊞</div>
+        <h3>Rich Tables</h3>
+        <p>Cell merge, resize, column width, styled headers. Tables that render identically everywhere.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">⚡</div>
+        <h3>Plugin System</h3>
+        <p>Extend the editor with custom content types, toolbar buttons, and behaviors. Headless by design.</p>
+      </div>
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">🖨</div>
+        <h3>Print & PDF</h3>
+        <p>What you see is what you print. Pixel-perfect PDF export with proper margins and page numbers.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Quick Start ── -->
+<section id="quickstart" class="code-section">
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Quick Start</div>
+    <h2 class="section-title reveal reveal-delay-1">Integrate in minutes.</h2>
+    <p class="section-desc reveal reveal-delay-2">One npm package. A few lines of code. Your documents rendered on canvas.</p>
+    <div class="install-block reveal reveal-delay-2">
+      <span class="prompt">$</span>
+      <span class="pkg">npm install @hufe921/canvas-editor</span>
+      <button class="copy" onclick="navigator.clipboard.writeText('npm install @hufe921/canvas-editor').then(()=>this.textContent='Copied')">Copy</button>
+    </div>
+    <div class="code-block reveal reveal-delay-3">
+      <div class="code-label">main.ts</div>
+<span class="kw">import</span> { <span class="fn">Editor</span> } <span class="kw">from</span> <span class="str">'@hufe921/canvas-editor'</span>
+
+<span class="kw">const</span> <span class="var">editor</span> = <span class="kw">new</span> <span class="fn">Editor</span>({
+  <span class="fn">container</span>: document.<span class="fn">getElementById</span>(<span class="str">'editor'</span>),
+  <span class="fn">data</span>: <span class="cm">/* your document data */</span>,
+  <span class="fn">mode</span>: <span class="str">'edit'</span>, <span class="cm">// or 'read'</span>
+})
+
+<span class="var">editor</span>.<span class="fn">destroy</span>()
+    </div>
+  </div>
+</section>
+
+<!-- ── Use Cases ── -->
+<section>
+  <div class="section-inner">
+    <div class="section-eyebrow reveal">Use Cases</div>
+    <h2 class="section-title reveal reveal-delay-1">Built for documents that matter.</h2>
+    <p class="section-desc reveal reveal-delay-2">When the output must be right — every time, on every screen.</p>
+    <div class="use-cases-grid">
+      <div class="use-case-card reveal">
+        <div class="use-case-icon">🏥</div>
+        <h3>EMR Systems</h3>
+        <p>Electronic medical records that render identically across devices. Patient data presented with clinical precision.</p>
+      </div>
+      <div class="use-case-card reveal reveal-delay-1">
+        <div class="use-case-icon">⚖️</div>
+        <h3>Legal Contracts</h3>
+        <p>Deterministic page breaks for contracts, filings, and agreements. Line-by-line consistency.</p>
+      </div>
+      <div class="use-case-card reveal reveal-delay-2">
+        <div class="use-case-icon">📊</div>
+        <h3>Reports & Invoices</h3>
+        <p>Native pagination for multi-page documents. Headers, footers, watermarks, and page numbers built in.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Stats ── -->
+<section class="section-light">
+  <div class="section-inner" style="text-align:center">
+    <div class="stats-bar reveal">
+      <div class="stat">
+        <div class="stat-value">5,000+</div>
+        <div class="stat-label">GitHub Stars</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">841</div>
+        <div class="stat-label">Forks</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1,435</div>
+        <div class="stat-label">Commits</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">TypeScript</div>
+        <div class="stat-label">Built With</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="section-inner" style="text-align:center">
+    <h2 class="section-title reveal" style="margin:0 auto 16px;text-align:center">Build better document experiences.</h2>
+    <p class="section-desc reveal reveal-delay-1" style="margin:0 auto 40px;text-align:center">Open-source, extensible, and ready for production.</p>
+    <div class="hero-actions reveal reveal-delay-2" style="justify-content:center">
+      <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-primary">Install from npm</a>
+      <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener" class="btn-secondary">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ── -->
+<footer class="footer">
+  <div class="footer-left">
+    Built by <a href="https://github.com/Hufe921" target="_blank" rel="noopener" style="color:var(--text);font-weight:600">Hufe921</a> · MIT License · Open Source
+  </div>
+  <div class="footer-right">
+    <a href="https://github.com/Hufe921/canvas-editor" target="_blank" rel="noopener">GitHub</a>
+    <a href="https://www.npmjs.com/package/@hufe921/canvas-editor" target="_blank" rel="noopener">npm</a>
+    <a href="https://hufe.club/canvas-editor" target="_blank" rel="noopener">Live Demo</a>
+  </div>
+</footer>
+
+<script>
+(function(){
+  'use strict'
+
+  // ── Scroll Reveal ──
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible')
+        observer.unobserve(entry.target)
+      }
+    })
+  },{threshold:0.12,rootMargin:'0px 0px -40px 0px'})
+
+  document.querySelectorAll('.reveal').forEach(function(el){observer.observe(el)})
+
+  // ── Nav shadow on scroll ──
+  var nav = document.querySelector('.nav')
+  var scrollY = 0
+  var ticking = false
+
+  function updateNav(){
+    if(scrollY > 10){
+      nav.style.boxShadow = '0 1px 8px rgba(0,0,0,.06)'
+    }else{
+      nav.style.boxShadow = 'none'
+    }
+    ticking = false
+  }
+
+  window.addEventListener('scroll',function(){
+    scrollY = window.pageYOffset || document.documentElement.scrollTop
+    if(!ticking){
+      requestAnimationFrame(updateNav)
+      ticking = true
+    }
+  },{passive:true})
+})()
+</script>
+</body>
+</html>
