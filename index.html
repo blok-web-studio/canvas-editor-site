@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Canvas-Editor — The Document Rendering Engine</title>
 <meta name="description" content="A canvas-based rich text editor for pixel-perfect, cross-browser document rendering. Built for EMR, legal, reports, and anything that needs to be right every time.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230071e3'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white' font-family='system-ui' font-weight='700'>C</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -31,7 +33,7 @@
   --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
 }
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%}
 body{
   font-family:var(--font);
   background:var(--bg);
@@ -74,7 +76,7 @@ a{color:inherit;text-decoration:none}
 
 /* ── Hero ── */
 .hero{
-  padding:140px clamp(20px,5vw,80px) 80px;
+  padding:130px clamp(20px,5vw,80px) 60px;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 .hero-eyebrow{
@@ -103,12 +105,15 @@ a{color:inherit;text-decoration:none}
 
 /* ── Editor Mockup ── */
 .mockup-wrap{
-  margin-top:60px;width:100%;max-width:960px;perspective:1200px;
+  margin-top:48px;width:100%;max-width:1100px;perspective:1400px;
 }
 .editor-mockup{
   background:#fff;border:1px solid var(--border);border-radius:var(--radius);
-  box-shadow:0 8px 40px rgba(0,0,0,.08),0 1px 3px rgba(0,0,0,.04);
+  box-shadow:0 20px 60px rgba(0,0,0,.1),0 2px 6px rgba(0,0,0,.05);
   overflow:hidden;
+  transform:perspective(1400px) rotateX(-6deg) translateY(0);
+  transition:transform .05s linear;
+  will-change:transform;
 }
 .editor-titlebar{
   display:flex;align-items:center;padding:12px 16px;
@@ -131,14 +136,15 @@ a{color:inherit;text-decoration:none}
   color:var(--text-secondary);font-size:13px;font-weight:600;
 }
 .editor-toolbar button.active{background:var(--border-light);color:var(--text)}
-.editor-body{display:flex;min-height:380px}
+.editor-toolbar button i{font-size:15px;font-style:normal}
+.editor-body{display:flex;min-height:480px}
 .editor-pages{
   flex:1;padding:32px 48px;font-family:var(--font);color:#1d1d1f;
   position:relative;
 }
 .editor-page{
   background:#fff;border:1px solid #eee;border-radius:2px;
-  padding:40px 48px;min-height:340px;
+  padding:40px 48px;min-height:440px;
   box-shadow:0 1px 4px rgba(0,0,0,.04);
 }
 .editor-page h2{font-size:22px;font-weight:700;letter-spacing:-.01em;margin-bottom:8px;line-height:1.3}
@@ -228,6 +234,7 @@ section{padding:120px clamp(20px,5vw,80px)}
 }
 .comparison-visual .break-label{
   position:absolute;top:-20px;right:0;font-size:10px;color:var(--red);font-weight:500;
+  display:flex;align-items:center;gap:4px;
 }
 .comparison-visual .perfect{position:relative}
 .comparison-visual .page-marker{
@@ -248,8 +255,9 @@ section{padding:120px clamp(20px,5vw,80px)}
 .feature-icon{
   width:40px;height:40px;background:var(--surface);border-radius:10px;
   display:flex;align-items:center;justify-content:center;margin-bottom:16px;
-  font-size:18px;
+  color:var(--accent);font-size:18px;
 }
+.feature-icon i{font-size:20px;font-style:normal}
 .feature-card h3{font-size:15px;font-weight:700;letter-spacing:-.01em;margin-bottom:6px}
 .feature-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
 
@@ -291,7 +299,12 @@ section{padding:120px clamp(20px,5vw,80px)}
   padding:28px;transition:border-color .2s;
 }
 .use-case-card:hover{border-color:var(--accent)}
-.use-case-icon{font-size:28px;margin-bottom:12px}
+.use-case-icon{
+  width:44px;height:44px;background:var(--surface);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px;
+  color:var(--accent);font-size:20px;
+}
+.use-case-icon i{font-size:22px;font-style:normal}
 .use-case-card h3{font-size:15px;font-weight:700;margin-bottom:6px}
 .use-case-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
 
@@ -318,11 +331,6 @@ section{padding:120px clamp(20px,5vw,80px)}
 .footer-right{display:flex;gap:20px}
 .footer-right a{font-size:13px;color:var(--text-secondary);font-weight:500;transition:color .2s}
 .footer-right a:hover{color:var(--accent)}
-
-/* ── Divider ── */
-.divider{
-  width:48px;height:1px;background:var(--border);margin:0 auto;
-}
 
 /* ── Mobile ── */
 @media(max-width:768px){
@@ -377,8 +385,8 @@ section{padding:120px clamp(20px,5vw,80px)}
   </div>
 
   <!-- Editor Mockup -->
-  <div class="mockup-wrap reveal reveal-delay-3">
-    <div class="editor-mockup">
+  <div class="mockup-wrap reveal reveal-delay-3" id="mockup-wrap">
+    <div class="editor-mockup" id="editor-mockup">
       <div class="editor-titlebar">
         <div class="editor-dots"><span></span><span></span><span></span></div>
         <div class="editor-title">Quarterly Report — canvas-editor</div>
@@ -389,17 +397,17 @@ section{padding:120px clamp(20px,5vw,80px)}
         <button><u>U</u></button>
         <button style="text-decoration:line-through">S</button>
         <div class="sep"></div>
-        <button>H₁</button>
-        <button>H₂</button>
-        <button>¶</button>
+        <button>H<sub>1</sub></button>
+        <button>H<sub>2</sub></button>
+        <button><i class="ph ph-text-aa"></i></button>
         <div class="sep"></div>
-        <button>≡</button>
-        <button>⫶</button>
-        <button>⊞</button>
+        <button><i class="ph ph-list-bullets"></i></button>
+        <button><i class="ph ph-list-numbers"></i></button>
+        <button><i class="ph ph-table"></i></button>
         <div class="sep"></div>
-        <button>🎨</button>
-        <button>📎</button>
-        <button>∑</button>
+        <button><i class="ph ph-palette"></i></button>
+        <button><i class="ph ph-paperclip"></i></button>
+        <button><i class="ph ph-function"></i></button>
       </div>
       <div class="editor-body">
         <div class="editor-pages">
@@ -414,7 +422,7 @@ section{padding:120px clamp(20px,5vw,80px)}
               <tr><td>SMB</td><td>$12.1M</td><td>$12.8M</td><td style="color:#1a6b30;font-weight:600">+5.8%</td></tr>
               <tr><td>Consumer</td><td>$8.5M</td><td>$8.6M</td><td style="color:#1a6b30;font-weight:600">+1.2%</td></tr>
             </table>
-            <div class="math">Revenue Growth: Σ (Segment Q4 − Segment Q3) / Σ Segment Q3 = 12.3%</div>
+            <div class="math">Revenue Growth: Sum(Q4) - Sum(Q3) / Sum(Q3) = 12.3%</div>
             <p>The enterprise segment continues to outpace expectations, with 8 new Fortune 500 contracts signed during the quarter.</p>
           </div>
         </div>
@@ -454,7 +462,7 @@ section{padding:120px clamp(20px,5vw,80px)}
             <span style="color:var(--text-secondary)">Segment &nbsp;&nbsp;&nbsp; Revenue &nbsp;&nbsp; Change</span><br>
             <span style="color:var(--text)">Enterprise &nbsp;$21.4M &nbsp;&nbsp;+17.6%</span><br>
             <span style="color:var(--text)">SMB &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$12.8M</span><br>
-            <div class="break-line"><span class="break-label">⚠ page break here</span></div>
+            <div class="break-line"><span class="break-label"><i class="ph ph-warning" style="font-size:11px"></i> page break here</span></div>
             <span style="color:var(--text)">Consumer &nbsp;&nbsp;$8.6M</span><br>
             <span style="color:var(--text-secondary);font-size:10px;margin-top:8px;display:block">↳ renders differently in Chrome vs Safari</span>
           </div>
@@ -487,32 +495,32 @@ section{padding:120px clamp(20px,5vw,80px)}
     <p class="section-desc reveal reveal-delay-2">Pagination, tables, math, forms, plugins — not bolted on. First-class.</p>
     <div class="features-grid">
       <div class="feature-card reveal">
-        <div class="feature-icon">📄</div>
+        <div class="feature-icon"><i class="ph ph-file-text"></i></div>
         <h3>Native Pagination</h3>
         <p>Document-style page breaks with headers, footers, and watermarks. Content flows across pages like Word.</p>
       </div>
       <div class="feature-card reveal reveal-delay-1">
-        <div class="feature-icon">∑</div>
+        <div class="feature-icon"><i class="ph ph-function"></i></div>
         <h3>LaTeX Math</h3>
         <p>Inline and block equations rendered natively. No iframes, no external renderers.</p>
       </div>
       <div class="feature-card reveal reveal-delay-2">
-        <div class="feature-icon">✓</div>
+        <div class="feature-icon"><i class="ph ph-check-square"></i></div>
         <h3>Form Controls</h3>
         <p>Checkboxes, radio buttons, dropdowns, date pickers, text inputs — all interactive and data-bound.</p>
       </div>
       <div class="feature-card reveal">
-        <div class="feature-icon">⊞</div>
+        <div class="feature-icon"><i class="ph ph-table"></i></div>
         <h3>Rich Tables</h3>
         <p>Cell merge, resize, column width, styled headers. Tables that render identically everywhere.</p>
       </div>
       <div class="feature-card reveal reveal-delay-1">
-        <div class="feature-icon">⚡</div>
+        <div class="feature-icon"><i class="ph ph-plug"></i></div>
         <h3>Plugin System</h3>
         <p>Extend the editor with custom content types, toolbar buttons, and behaviors. Headless by design.</p>
       </div>
       <div class="feature-card reveal reveal-delay-2">
-        <div class="feature-icon">🖨</div>
+        <div class="feature-icon"><i class="ph ph-printer"></i></div>
         <h3>Print & PDF</h3>
         <p>What you see is what you print. Pixel-perfect PDF export with proper margins and page numbers.</p>
       </div>
@@ -554,17 +562,17 @@ section{padding:120px clamp(20px,5vw,80px)}
     <p class="section-desc reveal reveal-delay-2">When the output must be right — every time, on every screen.</p>
     <div class="use-cases-grid">
       <div class="use-case-card reveal">
-        <div class="use-case-icon">🏥</div>
+        <div class="use-case-icon"><i class="ph ph-heart-pulse"></i></div>
         <h3>EMR Systems</h3>
         <p>Electronic medical records that render identically across devices. Patient data presented with clinical precision.</p>
       </div>
       <div class="use-case-card reveal reveal-delay-1">
-        <div class="use-case-icon">⚖️</div>
+        <div class="use-case-icon"><i class="ph ph-scales"></i></div>
         <h3>Legal Contracts</h3>
         <p>Deterministic page breaks for contracts, filings, and agreements. Line-by-line consistency.</p>
       </div>
       <div class="use-case-card reveal reveal-delay-2">
-        <div class="use-case-icon">📊</div>
+        <div class="use-case-icon"><i class="ph ph-chart-bar"></i></div>
         <h3>Reports & Invoices</h3>
         <p>Native pagination for multi-page documents. Headers, footers, watermarks, and page numbers built in.</p>
       </div>
@@ -621,9 +629,18 @@ section{padding:120px clamp(20px,5vw,80px)}
   </div>
 </footer>
 
+<script src="https://unpkg.com/lenis@1.1.14/dist/lenis.min.js"></script>
 <script>
 (function(){
   'use strict'
+
+  // ── Lenis Smooth Scroll ──
+  var lenis = new Lenis()
+  function raf(time) {
+    lenis.raf(time)
+    requestAnimationFrame(raf)
+  }
+  requestAnimationFrame(raf)
 
   // ── Scroll Reveal ──
   var observer = new IntersectionObserver(function(entries){
@@ -651,11 +668,32 @@ section{padding:120px clamp(20px,5vw,80px)}
     ticking = false
   }
 
+  // ── Mockup Tilt ──
+  var mockup = document.getElementById('editor-mockup')
+  var tiltRaf = false
+
+  function updateTilt(){
+    var y = window.pageYOffset || document.documentElement.scrollTop
+    // Tilt from -6deg to 0deg over first 500px of scroll
+    var progress = Math.min(y / 500, 1)
+    // Ease out cubic
+    var eased = 1 - Math.pow(1 - progress, 3)
+    var rotateX = -6 + (6 * eased)
+    // Also lift slightly as it flattens
+    var translateY = -10 * (1 - eased)
+    mockup.style.transform = 'perspective(1400px) rotateX(' + rotateX + 'deg) translateY(' + translateY + 'px)'
+    tiltRaf = false
+  }
+
   window.addEventListener('scroll',function(){
     scrollY = window.pageYOffset || document.documentElement.scrollTop
     if(!ticking){
       requestAnimationFrame(updateNav)
       ticking = true
+    }
+    if(!tiltRaf){
+      requestAnimationFrame(updateTilt)
+      tiltRaf = true
     }
   },{passive:true})
 })()
