@@ -677,7 +677,21 @@ section{padding:120px clamp(20px,5vw,80px)}
   'use strict'
 
   // ── Lenis Smooth Scroll ──
-  var lenis = new Lenis()
+  var lenis = new Lenis({
+    duration:1.2,
+    easing:function(t){return Math.min(1,1.001-Math.pow(2,-10*t))},
+    smoothWheel:true
+  })
+
+  // Handle anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(function(anchor){
+    anchor.addEventListener('click',function(e){
+      e.preventDefault()
+      var target=document.querySelector(this.getAttribute('href'))
+      if(target) lenis.scrollTo(target,{offset:-60})
+    })
+  })
+
   function raf(time) {
     lenis.raf(time)
     requestAnimationFrame(raf)
